@@ -1,0 +1,50 @@
+library(reshape2)
+library(plyr)
+library(nlme)
+
+
+# DATA BY SAMPLING TIME IN DIFFERENT CSV FILES
+
+-------------------------------------------------------------------------------------------------
+# Load / Transform data
+
+    getwd()
+    T0<-read.csv("data/T0.csv")
+    T1<-read.csv("data/T1.csv")
+    T2<-read.csv("data/T2.csv")
+    T3<-read.csv("data/T3.csv")
+    
+    data<-join(T0, T1, by ="Core", type = "full", match = "all")
+    data<-join(data, T2, by ="Core", type = "full", match = "all")
+    data<-join(data, T3, by ="Core", type = "full", match = "all")
+
+# Structure 
+
+    data$Colony<-factor(as.character(data$Colony), 
+                       levels=c("S1","S4","S3","S5","S6","S2"))
+    data$Community<-factor(as.character(data$Community), 
+                       levels=c("C","DC","D")) # DC = (0.1:0.9)Dporportion
+    data$Treatment <- factor (as.character(data$Treatment), 
+                       levels=c("CO2","C","D","Fe", "N", "NP", "NPF"))
+    data$Repli <- as.factor(data$Repli)
+    
+    summary(data)
+
+# STATS
+
+# -------------------------------------------------------------------------
+# DATA ANALYSIS
+# Analysis of initial symbiont abundance
+
+# Initial geometric mean symbiont abundance
+10^mean(data$logTot.SH_0)  
+
+#     Effect of Colony and Community on initial symbiont abundance
+      anova(lm(logTot.SH_0 ~ Colony*Community, data=data))  
+      # Only Colony is significative for T0
+
+#     Effect of Treatment and Replicate 
+      anova(lm(logTot.SH_0 ~ Treatment*Repli, data=data))  
+      # Initial SH ratio were diff across treatments. Replicates or its interactions were not
+
+# Build lm model that includes Colony as a factor, and different intercepts for treatments.  
